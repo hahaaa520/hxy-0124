@@ -319,6 +319,75 @@ document.querySelectorAll('[data-next-project]').forEach((button) => {
   });
 });
 
+// Lingjing turns the proposal into a small, playable routing system.
+const lingjingCases = {
+  cache: {
+    query: '故宫几点开门？',
+    intent: 'simple_fact',
+    path: 'cache',
+    status: 'CACHE HIT · 毫秒级响应',
+    title: '高频事实直接命中',
+    answer: '无需重复调用大模型，返回经过审核的开放时间，同时降低延迟与调用成本。',
+    output: 'OUTPUT · 精准 / 快速 / 可更新'
+  },
+  rag: {
+    query: '太和殿屋脊上的吻兽有什么寓意？',
+    intent: 'deep_knowledge',
+    path: 'rag',
+    status: 'HYBRID SEARCH · 来源可追溯',
+    title: '知识库检索后再生成',
+    answer: '关键词与向量混合检索文史资料，经重排序后交给大模型组织答案，并标注知识来源与置信度。',
+    output: 'OUTPUT · 深度 / 有依据 / 防幻觉'
+  },
+  agent: {
+    query: '现在哪个景点人最少？',
+    intent: 'need_real_time_info',
+    path: 'agent',
+    status: 'TOOL AGENT · 调用实时人流 API',
+    title: '让智能体连接现实世界',
+    answer: '工具调用 Agent 获取实时客流，规划 Agent 综合位置与动线，再由答案合成 Agent 输出建议。',
+    output: 'OUTPUT · 实时 / 可行动 / 多智能体协作'
+  },
+  access: {
+    query: '我看不清导览牌，怎么完成游览？',
+    intent: 'accessibility_support',
+    path: 'agent',
+    status: 'ACCESS MODE · 会话与设备协同',
+    title: '把文化体验交到每个人手里',
+    answer: '对话管理、路线规划与工具 Agent 协作，通过手机、耳机或导览机器人提供语音讲解、位置提醒与连续追问。',
+    output: 'OUTPUT · 无障碍 / 个性化 / 上下文连续'
+  }
+};
+const lingjingCaseButtons = [...document.querySelectorAll('[data-lingjing-case]')];
+const lingjingQuery = document.querySelector('#lingjing-query');
+const lingjingIntent = document.querySelector('#lingjing-intent');
+const lingjingStatus = document.querySelector('#lingjing-status');
+const lingjingAnswerTitle = document.querySelector('#lingjing-answer-title');
+const lingjingAnswer = document.querySelector('#lingjing-answer');
+const lingjingOutput = document.querySelector('#lingjing-output');
+const lingjingAnswerCard = document.querySelector('.pipeline-answer');
+
+function activateLingjingCase(caseId) {
+  const scenario = lingjingCases[caseId];
+  if (!scenario) return;
+  lingjingCaseButtons.forEach((button) => {
+    const active = button.dataset.lingjingCase === caseId;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+  document.querySelectorAll('[data-lingjing-path]').forEach((path) => path.classList.toggle('active', path.dataset.lingjingPath === scenario.path));
+  if (lingjingQuery) lingjingQuery.textContent = scenario.query;
+  if (lingjingIntent) lingjingIntent.textContent = scenario.intent;
+  if (lingjingStatus) lingjingStatus.textContent = scenario.status;
+  if (lingjingAnswerTitle) lingjingAnswerTitle.textContent = scenario.title;
+  if (lingjingAnswer) lingjingAnswer.textContent = scenario.answer;
+  if (lingjingOutput) lingjingOutput.textContent = scenario.output;
+  lingjingAnswerCard?.classList.remove('flash');
+  requestAnimationFrame(() => lingjingAnswerCard?.classList.add('flash'));
+}
+
+lingjingCaseButtons.forEach((button) => button.addEventListener('click', () => activateLingjingCase(button.dataset.lingjingCase)));
+
 // The final chapter is a two-universe portal: visitors choose an era, then probe its stars.
 const eraTabs = [...document.querySelectorAll('.era-tab')];
 const eraPanels = [...document.querySelectorAll('.era-panel')];
@@ -362,7 +431,7 @@ document.querySelectorAll('.era-panel').forEach((panel) => {
   });
 });
 
-// Every award opens a photo-backed evidence card; missing photos are explicit.
+// Every award opens the strongest available evidence: photo, public link, or a compact text archive.
 const awardModal = document.querySelector('.award-modal');
 const awardModalImage = awardModal.querySelector('.award-modal-visual img');
 const awardModalProject = document.querySelector('#award-modal-project');
@@ -370,29 +439,47 @@ const awardModalTitle = document.querySelector('#award-modal-title');
 const awardModalResult = document.querySelector('#award-modal-result');
 const awardModalStory = document.querySelector('#award-modal-story');
 const awardModalLink = document.querySelector('#award-modal-link');
+const awardModalEvidence = document.querySelector('#award-modal-evidence');
 const awardModalClose = awardModal.querySelector('.award-modal-close');
 
 function openAwardEvidence(source) {
   const imagePath = source.dataset.image;
+  const publicLink = source.dataset.link;
   awardModalProject.textContent = source.dataset.projectName || source.dataset.category || 'PROJECT';
   awardModalTitle.textContent = source.dataset.title || '';
   awardModalResult.textContent = source.dataset.result || '';
   awardModalStory.textContent = source.dataset.story || '';
-  if (source.dataset.link) {
-    awardModalLink.href = source.dataset.link;
+  awardModal.classList.remove('has-image', 'text-only', 'image-error');
+  if (publicLink) {
+    awardModalLink.href = publicLink;
     awardModalLink.hidden = false;
   } else {
     awardModalLink.href = '#';
     awardModalLink.hidden = true;
   }
   if (imagePath) {
-    awardModalImage.src = imagePath;
     awardModalImage.alt = `${source.dataset.title || '奖项'}对应照片`;
+    awardModalImage.onload = () => {
+      awardModal.classList.add('has-image');
+      awardModal.classList.remove('text-only', 'image-error');
+    };
+    awardModalImage.onerror = () => {
+      awardModalImage.removeAttribute('src');
+      awardModalImage.alt = '';
+      awardModal.classList.remove('has-image');
+      awardModal.classList.add('text-only', 'image-error');
+      if (awardModalEvidence) awardModalEvidence.textContent = '图片暂不可用 · 已切换文字档案';
+    };
+    awardModalImage.src = imagePath;
     awardModal.classList.add('has-image');
+    if (awardModalEvidence) awardModalEvidence.textContent = publicLink ? '已匹配原始照片与官方公示' : '已匹配对应原始照片';
   } else {
     awardModalImage.removeAttribute('src');
     awardModalImage.alt = '';
-    awardModal.classList.remove('has-image');
+    awardModalImage.onload = null;
+    awardModalImage.onerror = null;
+    awardModal.classList.add('text-only');
+    if (awardModalEvidence) awardModalEvidence.textContent = publicLink ? '官方公示 · 不使用错配照片' : '文字档案 · 不使用无关照片';
   }
   awardModal.classList.add('open');
   awardModal.setAttribute('aria-hidden', 'false');

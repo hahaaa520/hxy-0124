@@ -160,14 +160,37 @@
 
           <article id="project-lingjing" class="project-panel" role="tabpanel" data-panel="lingjing" hidden>
             <div class="project-copy">
-              <div class="project-index">03 / MAIN PROJECT</div><h3>灵境：基于机器人数字导览的<br />智慧文旅智能导览系统</h3>
-              <p class="project-quote">这是我大一阶段投入最多的项目，也是技术、文旅体验与团队协作的一次集中实践。</p>
+              <div class="project-index">03 / MAIN PROJECT</div><h3>灵境：多智能体协同与<br />动态知识管理的智慧文旅导览系统</h3>
+              <p class="project-quote">让游客得到的不只是“一个答案”，而是准确、连贯、个性化且在弱网环境下仍可靠的文化体验。</p>
               <div class="project-linked-awards"><span>杉达杯 · 一等奖</span><span>计算机应用能力大赛 · 优胜奖</span><span>商业精英挑战赛 · 一等奖</span></div>
-              <p>作为队长，我带领团队围绕支付宝命题完成智慧文旅智能导览解决方案，并持续带着同一项目参加计算机应用能力大赛和商业精英挑战赛。</p>
-              <p class="need-more">下一版待补：核心功能、你负责的模块、技术栈与真实应用场景。</p>
+              <p>作为队长，我带领团队揭榜支付宝命题，围绕信息孤岛、讲解同质化、特殊人群覆盖不足等痛点，设计“云—边—端”协同架构，并把缓存、RAG 与多智能体做成可动态路由的三条处理链。</p>
+              <ul><li><b>3</b><span>缓存 / RAG / Agent 处理链</span></li><li><b>4</b><span>阶段实现路径</span></li><li><b>80%+</b><span>简单重复问题目标过滤率</span></li></ul>
               <button class="project-next" type="button" data-next-project="kmeans">看看另一条技术支线 →</button>
             </div>
             <div class="project-media"><figure><img src="assets/projects/lingjing-competition.jpg" alt="华心怡携灵境项目参加计算机应用能力大赛" loading="lazy" decoding="async" /><figcaption>计算机应用能力大赛现场</figcaption></figure><figure><img src="assets/projects/lingjing-sanda-award.jpg" alt="灵境项目杉达杯一等奖证书" loading="lazy" decoding="async" /><figcaption>杉达杯全国邀请赛一等奖</figcaption></figure></div>
+            <section class="lingjing-lab" data-signal="builder" aria-labelledby="lingjing-lab-title">
+              <div class="lingjing-lab-head"><div><small>LIVE SYSTEM · 不是示意图，点一个游客问题试试</small><h4 id="lingjing-lab-title">灵境请求路由实验台</h4></div><p>同一个入口，会根据问题复杂度、实时性与用户需求自动选择不同处理链。</p></div>
+              <div class="lingjing-cases" role="tablist" aria-label="选择游客问题">
+                <button class="active" type="button" role="tab" aria-selected="true" data-lingjing-case="cache"><i>01</i><span>故宫几点开门？</span></button>
+                <button type="button" role="tab" aria-selected="false" data-lingjing-case="rag"><i>02</i><span>吻兽有什么寓意？</span></button>
+                <button type="button" role="tab" aria-selected="false" data-lingjing-case="agent"><i>03</i><span>现在哪个景点人少？</span></button>
+                <button type="button" role="tab" aria-selected="false" data-lingjing-case="access"><i>04</i><span>我看不清，怎么游览？</span></button>
+              </div>
+              <div class="lingjing-pipeline" aria-live="polite">
+                <article class="pipeline-query"><small>USER QUERY</small><strong id="lingjing-query">故宫几点开门？</strong><span>游客 · 支付宝小程序</span></article>
+                <i class="pipeline-arrow">→</i>
+                <article class="pipeline-router"><small>ROUTER AGENT</small><strong id="lingjing-intent">simple_fact</strong><span>意图识别 · 复杂度判断</span></article>
+                <i class="pipeline-arrow">→</i>
+                <div class="pipeline-paths" aria-label="三条处理路径">
+                  <span class="active" data-lingjing-path="cache"><b>A</b>智能缓存<small>L1 Redis · L2 语义缓存</small></span>
+                  <span data-lingjing-path="rag"><b>B</b>RAG 引擎<small>混合检索 · 重排序 · 溯源</small></span>
+                  <span data-lingjing-path="agent"><b>C</b>Multi-Agent<small>对话 · 工具 · 专家协作</small></span>
+                </div>
+                <i class="pipeline-arrow">→</i>
+                <article class="pipeline-answer"><small id="lingjing-status">CACHE HIT · 毫秒级响应</small><strong id="lingjing-answer-title">高频事实直接命中</strong><p id="lingjing-answer">无需重复调用大模型，返回经过审核的开放时间，同时降低延迟与调用成本。</p><span id="lingjing-output">OUTPUT · 精准 / 快速 / 可更新</span></article>
+              </div>
+              <div class="lingjing-stack"><span>Python + FastAPI</span><span>Redis</span><span>ChromaDB</span><span>LangChain / LlamaIndex</span><span>WebSocket</span><span>Docker</span></div>
+            </section>
           </article>
 
           <article id="project-kmeans" class="project-panel" role="tabpanel" data-panel="kmeans" hidden>
@@ -199,7 +222,7 @@
             <div class="feature-foot"><span>团队负责人</span><b>2026 ↗</b></div>
           </button>
           <a class="feature feature-pink reveal" data-delay="1" href="https://article.xuexi.cn/articles/index.html?art_id=2448912052998783952&amp;source=share&amp;cdn=https%3A%2F%2Fregion-zhejiang-resource&amp;study_style_id=feeds_opaque&amp;reco_id=1038e8ce283ac0a884410005&amp;share_to=wx_single&amp;study_share_enable=1&amp;study_comment_disable=1&amp;ptype=0&amp;item_id=2448912052998783952" target="_blank" rel="noopener"><div class="feature-no">02 / PUBLICATION</div><div class="feature-icon">✍️</div><h3>文章登上“学习强国”</h3><p>原创文章《那趟我没赶上的高铁》获得平台刊载，点击阅读原文。</p><div class="feature-foot"><span>文字创作</span><b>READ ↗</b></div></a>
-          <button class="feature feature-purple award-evidence reveal" type="button" data-title="国家级大学生创新创业训练计划" data-result="国家级立项" data-project-name="双创项目" data-image="" data-story="负责项目推进与团队协作，目前等待补充立项现场或证书照片。"><div class="feature-no">03 / PROJECT</div><div class="feature-icon">🚀</div><h3>国家级双创立项</h3><p>负责的双创项目获国家级立项，在真实项目中推进创意落地。</p><div class="feature-foot"><span>项目负责人</span><b>查看证据 ↗</b></div></button>
+          <button class="feature feature-purple award-evidence reveal" type="button" data-title="国家级大学生创新创业训练计划" data-result="国家级立项" data-project-name="双创项目" data-image="" data-story="作为项目负责人推进团队协作与项目落地。当前档案仅展示已经确认的文字信息，不使用无关照片代替凭证。"><div class="feature-no">03 / PROJECT</div><div class="feature-icon">🚀</div><h3>国家级双创立项</h3><p>负责的双创项目获国家级立项，在真实项目中推进创意落地。</p><div class="feature-foot"><span>项目负责人</span><b>查看项目档案 ↗</b></div></button>
         </div>
 
         <section class="constellation-lab reveal" aria-labelledby="constellation-title">
@@ -214,11 +237,11 @@
           </div>
           <div class="constellation-stage">
             <svg viewBox="0 0 100 58" preserveAspectRatio="none" aria-hidden="true"><polyline points="10,43 25,17 42,41 58,13 75,37 90,20" /></svg>
-            <button class="award-star active" style="--x:10%;--y:74%" type="button" aria-label="三创赛上海市二等奖" data-category="创新创业 · 2026" data-title="全国大学生电子商务三创赛" data-result="上海市二等奖" data-project-name="K-Means 项目" data-image="assets/projects/kmeans-competition.jpg" data-story="以K-Means聚类方法完成项目，并在上海市选拔赛中获得二等奖。"><i>✦</i><span>三创赛</span></button>
-            <button class="award-star" style="--x:25%;--y:29%" type="button" aria-label="商业精英挑战赛一等奖" data-category="商业实践 · 2026" data-title="上海杉达学院商业精英挑战赛" data-result="一等奖" data-project-name="灵境" data-image="" data-story="灵境项目参赛成果，等待补充比赛或获奖照片。"><i>✦</i><span>商业挑战</span></button>
+            <button class="award-star active" style="--x:10%;--y:74%" type="button" aria-label="三创赛上海市二等奖" data-category="创新创业 · 2026" data-title="全国大学生电子商务三创赛" data-result="上海市二等奖" data-project-name="K-Means 项目" data-image="assets/projects/kmeans-award.jpg" data-story="以K-Means聚类方法完成项目，并在上海市选拔赛中获得二等奖。这里展示与该奖项对应的证书。"><i>✦</i><span>三创赛</span></button>
+            <button class="award-star" style="--x:25%;--y:29%" type="button" aria-label="商业精英挑战赛一等奖" data-category="商业实践 · 2026" data-title="上海杉达学院商业精英挑战赛" data-result="一等奖" data-project-name="灵境" data-image="" data-story="灵境项目参赛成果。当前只展示已确认的奖项信息，不使用其他比赛照片代替。"><i>✦</i><span>商业挑战</span></button>
             <button class="award-star" style="--x:42%;--y:70%" type="button" aria-label="操舞大赛一等奖" data-category="艺术舞台 · 2025" data-title="“光彪杯”操舞大赛" data-result="一等奖" data-project-name="艺术舞台" data-image="assets/photos/sports-medal.jpg" data-story="这张拿着金色奖牌的照片，记录的是“光彪杯”操舞大赛一等奖，不是普通运动会奖牌。"><i>✦</i><span>操舞大赛</span></button>
-            <button class="award-star" style="--x:58%;--y:22%" type="button" aria-label="程序设计联赛三等奖" data-category="专业能力 · 2025" data-title="程序设计联赛秋季赛" data-result="三等奖" data-project-name="程序设计" data-image="" data-story="等待补充程序设计联赛证书或现场照片。"><i>✦</i><span>程序设计</span></button>
-            <button class="award-star" style="--x:75%;--y:64%" type="button" aria-label="物理实验竞赛二等奖" data-category="物理探索 · 2026" data-title="上海杉达学院物理实验竞赛" data-result="二等奖" data-project-name="物理实验" data-image="" data-story="等待补充物理实验竞赛证书或实验现场照片。"><i>✦</i><span>物理实验</span></button>
+            <button class="award-star" style="--x:58%;--y:22%" type="button" aria-label="程序设计联赛三等奖" data-category="专业能力 · 2025" data-title="程序设计联赛秋季赛" data-result="三等奖" data-project-name="程序设计" data-image="" data-story="第五届上海杉达学院程序设计联赛秋季赛三等奖，作为专业能力成长档案收录。"><i>✦</i><span>程序设计</span></button>
+            <button class="award-star" style="--x:75%;--y:64%" type="button" aria-label="物理实验竞赛二等奖" data-category="物理探索 · 2026" data-title="上海杉达学院物理实验竞赛" data-result="二等奖" data-project-name="物理实验" data-image="" data-story="上海杉达学院物理实验竞赛二等奖，记录从课堂实验走向竞赛验证的一步。"><i>✦</i><span>物理实验</span></button>
             <button class="award-star" style="--x:90%;--y:34%" type="button" aria-label="计算机应用能力大赛优胜奖" data-category="计算机 · 2026" data-title="上海市大学生计算机应用能力大赛" data-result="优胜奖" data-project-name="灵境" data-image="assets/projects/lingjing-competition.jpg" data-story="携灵境项目参加上海市大学生计算机应用能力大赛。"><i>✦</i><span>计算机应用</span></button>
           </div>
         </section>
@@ -228,20 +251,20 @@
           <details class="award-archive">
             <summary><span><b>13+</b> 项大学阶段成果已归档</span><em>打开完整档案 ＋</em></summary>
           <div class="award-list">
-            <button class="award-evidence" type="button" data-title="全国大学生电子商务“创新、创意及创业”挑战赛" data-result="上海市二等奖" data-project-name="K-Means 项目" data-image="assets/projects/kmeans-competition.jpg" data-story="以K-Means聚类方法完成项目，进入上海市选拔赛并获得二等奖。"><b>01</b><p>全国大学生电子商务“创新、创意及创业”挑战赛</p><strong>上海市二等奖</strong><em>查看照片 ↗</em></button>
-            <button class="award-evidence missing-photo" type="button" data-title="上海杉达学院商业精英挑战赛" data-result="一等奖" data-project-name="灵境" data-image="" data-story="灵境项目参赛成果，等待补充现场或获奖照片。"><b>02</b><p>上海杉达学院商业精英挑战赛</p><strong>一等奖</strong><em>待补照片 ＋</em></button>
+            <button class="award-evidence" type="button" data-title="全国大学生电子商务“创新、创意及创业”挑战赛" data-result="上海市二等奖" data-project-name="K-Means 项目" data-image="assets/projects/kmeans-award.jpg" data-story="以K-Means聚类方法完成项目，进入上海市选拔赛并获得二等奖。这里展示与该奖项对应的证书。"><b>01</b><p>全国大学生电子商务“创新、创意及创业”挑战赛</p><strong>上海市二等奖</strong><em>查看证书 ↗</em></button>
+            <button class="award-evidence text-evidence" type="button" data-title="上海杉达学院商业精英挑战赛" data-result="一等奖" data-project-name="灵境" data-image="" data-story="灵境项目参赛成果。当前只展示已确认的奖项信息，不使用其他比赛照片代替。"><b>02</b><p>上海杉达学院商业精英挑战赛</p><strong>一等奖</strong><em>查看文字档案 ↗</em></button>
             <button class="award-evidence" type="button" data-title="上海杉达学院“光彪杯”操舞大赛" data-result="一等奖" data-project-name="艺术舞台" data-image="assets/photos/sports-medal.jpg" data-story="赛后拿着金色奖牌留影。这张照片已重新核对并与操舞大赛一等奖正确对应。"><b>03</b><p>上海杉达学院“光彪杯”操舞大赛</p><strong>一等奖</strong><em>查看奖牌照 ↗</em></button>
-            <button class="award-evidence" type="button" data-title="校级三创赛" data-result="三等奖并入围市赛" data-project-name="K-Means 项目" data-image="assets/projects/kmeans-award.jpg" data-story="K-Means项目从校赛进入市赛，持续迭代后获得上海市二等奖。"><b>04</b><p>校级三创赛（入围市赛）</p><strong>三等奖</strong><em>查看照片 ↗</em></button>
-            <button class="award-evidence missing-photo" type="button" data-title="第五届上海杉达学院程序设计联赛秋季赛" data-result="三等奖" data-project-name="程序设计" data-image="" data-story="等待补充程序设计联赛证书或比赛现场照片。"><b>05</b><p>第五届上海杉达学院程序设计联赛秋季赛</p><strong>三等奖</strong><em>待补照片 ＋</em></button>
+            <button class="award-evidence text-evidence" type="button" data-title="校级三创赛" data-result="三等奖并入围市赛" data-project-name="K-Means 项目" data-image="" data-story="K-Means项目从校赛三等奖进入市赛，并在持续迭代后获得上海市二等奖。原先误放的市赛证书已移除，避免把两个不同赛段混为一谈。"><b>04</b><p>校级三创赛（入围市赛）</p><strong>三等奖</strong><em>查看赛段档案 ↗</em></button>
+            <button class="award-evidence text-evidence" type="button" data-title="第五届上海杉达学院程序设计联赛秋季赛" data-result="三等奖" data-project-name="程序设计" data-image="" data-story="第五届上海杉达学院程序设计联赛秋季赛三等奖，作为专业能力成长档案收录。"><b>05</b><p>第五届上海杉达学院程序设计联赛秋季赛</p><strong>三等奖</strong><em>查看文字档案 ↗</em></button>
             <button class="award-evidence" type="button" data-title="上海市大学生计算机应用能力大赛" data-result="优胜奖" data-project-name="灵境" data-image="assets/projects/lingjing-competition.jpg" data-story="携灵境项目参加上海市大学生计算机应用能力大赛。"><b>06</b><p>上海市大学生计算机应用能力大赛</p><strong>优胜奖</strong><em>查看照片 ↗</em></button>
-            <button class="award-evidence missing-photo" type="button" data-title="上海杉达学院物理实验竞赛" data-result="二等奖" data-project-name="物理实验" data-image="" data-story="等待补充物理实验竞赛证书或实验现场照片。"><b>07</b><p>上海杉达学院物理实验竞赛</p><strong>二等奖</strong><em>待补照片 ＋</em></button>
+            <button class="award-evidence text-evidence" type="button" data-title="上海杉达学院物理实验竞赛" data-result="二等奖" data-project-name="物理实验" data-image="" data-story="上海杉达学院物理实验竞赛二等奖，记录从课堂实验走向竞赛验证的一步。"><b>07</b><p>上海杉达学院物理实验竞赛</p><strong>二等奖</strong><em>查看文字档案 ↗</em></button>
             <button class="award-evidence" type="button" data-title="“地嘉人善迎天下”善文化主题宣讲活动" data-result="优秀奖" data-project-name="善文化宣讲" data-image="assets/photos/culture-speech.jpg" data-story="以真诚表达讲述善文化主题，在公开宣讲中获得优秀奖。"><b>08</b><p>“地嘉人善迎天下”善文化主题宣讲活动</p><strong>优秀奖</strong><em>查看照片 ↗</em></button>
           </div>
             <div class="more-awards">
               <button class="award-evidence" type="button" data-title="音乐剧《This Is Me》" data-result="嘉善校区晚会铜奖" data-project-name="音乐剧舞台" data-image="assets/photos/fa57a20c27b9ad332e70481fe1f0b4cf.jpg" data-story="作为主唱之一参演音乐剧《This Is Me》。">作为主唱之一参演音乐剧《This Is Me》，获嘉善校区晚会铜奖</button>
-              <button class="award-evidence" type="button" data-title="2026 杉达暑期社会实践" data-result="重点项目" data-project-name="社会实践" data-image="assets/photos/9350f19e2427f81b9f41b7c2a31a2f82.jpg" data-link="https://mp.weixin.qq.com/s/7EbYGetWYFS_XY778SV9WA" data-story="社会实践项目已有官方公众号公示。照片记录了从前一年的现场参与，到本年度以视频方式继续加入的实践轨迹。">社会实践重点项目 · 查看照片与公示</button>
+              <button class="award-evidence text-evidence" type="button" data-title="2026 杉达暑期社会实践" data-result="重点项目" data-project-name="社会实践" data-image="" data-link="https://mp.weixin.qq.com/s/7EbYGetWYFS_XY778SV9WA" data-story="本届社会实践重点项目已有官方公众号公示。上一阶段的活动照片不再作为本届项目证据，避免年份与内容错配。">社会实践重点项目 · 查看官方公示</button>
               <button class="award-evidence" type="button" data-title="上海社会组织公益创新创业大赛" data-result="团队入围" data-project-name="闻舟" data-image="assets/photos/public-innovation.jpg" data-story="以闻舟无障碍文旅导览公益项目参加上海社会组织公益创新创业大赛。">负责团队入围上海社会组织公益创新创业大赛</button>
-              <button class="award-evidence missing-photo" type="button" data-title="寝室样板间与文明寝室" data-result="集体荣誉" data-project-name="校园生活" data-image="" data-story="等待补充寝室布置或荣誉证书照片。">寝室样板间、文明寝室 · 待补照片</button>
+              <button class="award-evidence text-evidence" type="button" data-title="寝室样板间与文明寝室" data-result="集体荣誉" data-project-name="校园生活" data-image="" data-story="与室友共同获得寝室样板间、文明寝室荣誉，作为大学集体生活档案收录。">寝室样板间、文明寝室 · 查看文字档案</button>
             </div>
           </details>
           <div class="public-proof-dock reveal">
@@ -428,12 +451,12 @@
       <div class="hx-final">
         <div class="hx-final-copy"><small>MISSION HXY-0124 · FINAL CONSTELLATION</small><p>你收集到的每一束信号，都不是一个孤立标签。</p><h2>它们共同组成<br /><em>华心怡。</em></h2><strong id="final-signal-message">继续探索，点亮剩余信号。</strong><a href="#top">回到观察站起点 ↑</a></div>
         <div class="hx-constellation" aria-label="华心怡的五束人格信号">
-          <svg viewBox="0 0 100 100" aria-hidden="true"><polyline points="13,62 34,22 52,53 72,18 87,66 52,53 13,62" /></svg>
-          <i style="--x:13%;--y:62%" data-final-signal="origin"><b>01</b><span>发现问题</span></i>
-          <i style="--x:34%;--y:22%" data-final-signal="builder"><b>02</b><span>创造方案</span></i>
-          <i style="--x:52%;--y:53%" data-final-signal="leader"><b>03</b><span>承担责任</span></i>
-          <i style="--x:72%;--y:18%" data-final-signal="voice"><b>04</b><span>真诚表达</span></i>
-          <i style="--x:87%;--y:66%" data-final-signal="future"><b>05</b><span>走向科研</span></i>
+          <svg viewBox="0 0 100 100" aria-hidden="true"><polyline points="12,60 30,20 50,82 70,20 88,60 12,60" /></svg>
+          <i style="--x:12%;--y:60%" data-final-signal="origin"><b>01</b><span>发现问题</span></i>
+          <i style="--x:30%;--y:20%" data-final-signal="builder"><b>02</b><span>创造方案</span></i>
+          <i style="--x:50%;--y:82%" data-final-signal="leader"><b>03</b><span>承担责任</span></i>
+          <i style="--x:70%;--y:20%" data-final-signal="voice"><b>04</b><span>真诚表达</span></i>
+          <i style="--x:88%;--y:60%" data-final-signal="future"><b>05</b><span>走向科研</span></i>
           <div><small>HXY-0124</small><strong id="final-signal-count">0 / 5</strong><span>LIGHTS ONLINE</span></div>
         </div>
       </div>
@@ -442,14 +465,14 @@
 
   <div class="lightbox" role="dialog" aria-modal="true" aria-label="照片故事" aria-hidden="true">
     <button class="lightbox-close" type="button" aria-label="关闭照片">×</button>
-    <div class="lightbox-content"><img src="" alt="" decoding="async" /><p></p></div>
+    <div class="lightbox-content"><img alt="" decoding="async" /><p></p></div>
   </div>
 
   <div class="award-modal" role="dialog" aria-modal="true" aria-labelledby="award-modal-title" aria-hidden="true">
     <button class="award-modal-close" type="button" aria-label="关闭奖项详情">×</button>
     <div class="award-modal-card">
-      <div class="award-modal-visual"><img src="" alt="" decoding="async" /><div class="evidence-placeholder"><span>✦</span><strong>等待补充对应照片</strong><p>页面结构已经准备好，上传照片后即可自动替换。</p></div></div>
-      <div class="award-modal-copy"><p id="award-modal-project">PROJECT</p><h2 id="award-modal-title"></h2><strong id="award-modal-result"></strong><p id="award-modal-story"></p><a id="award-modal-link" href="#" target="_blank" rel="noopener" hidden>查看官方公示 ↗</a><span>VERIFIED MOMENT · HUAXINYI</span></div>
+      <div class="award-modal-visual"><img alt="" decoding="async" /></div>
+      <div class="award-modal-copy"><p id="award-modal-project">PROJECT</p><h2 id="award-modal-title"></h2><strong id="award-modal-result"></strong><div class="award-evidence-state"><i></i><span id="award-modal-evidence">已匹配原始照片</span></div><p id="award-modal-story"></p><a id="award-modal-link" href="#" target="_blank" rel="noopener" hidden>查看官方公示 ↗</a><span>VERIFIED MOMENT · HUAXINYI</span></div>
     </div>
   </div>
 
