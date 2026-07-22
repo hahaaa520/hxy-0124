@@ -271,7 +271,7 @@ radioToggle?.addEventListener('click', () => {
 });
 
 function modeForSection(sectionId) {
-  if (sectionId === 'projects' || sectionId === 'future') return 'field';
+  if (sectionId === 'future') return 'field';
   if (sectionId === 'stage' || sectionId === 'gallery') return 'city';
   if (sectionId === 'soundtrack') return null;
   return 'main';
