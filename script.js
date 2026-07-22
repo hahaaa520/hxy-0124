@@ -13,6 +13,7 @@ const soundVolume = document.querySelector('#sound-volume');
 const radioSection = document.querySelector('.dual-radio');
 const radioModeButtons = [...document.querySelectorAll('[data-radio-mode]')];
 const radioToggle = document.querySelector('#radio-toggle');
+const radioAuto = document.querySelector('#radio-auto');
 const radioTitle = document.querySelector('#radio-title');
 const radioCode = document.querySelector('#radio-code');
 const radioDescription = document.querySelector('#radio-description');
@@ -30,6 +31,8 @@ let trackPlayer;
 let audioActivated = false;
 let soundEnabled = localStorage.getItem('hxy0124-sound') !== 'off';
 let soundMode = ['main', 'field', 'city'].includes(localStorage.getItem('hxy0124-track-mode')) ? localStorage.getItem('hxy0124-track-mode') : 'main';
+let sceneSyncEnabled = localStorage.getItem('hxy0124-scene-sync') !== 'off';
+const trackPositions = { main: 0, field: 0, city: 0 };
 let savedVolume = Number(localStorage.getItem('hxy0124-volume') || 0.32);
 if (!Number.isFinite(savedVolume)) savedVolume = 0.32;
 savedVolume = Math.min(1, Math.max(0, savedVolume));
@@ -48,19 +51,19 @@ const radioPresets = {
     src: 'assets/audio/alternate-a.mp3',
     duration: 124.473,
     durationLabel: '2:04',
-    code: 'ALTERNATE ORBIT A · 02:04',
-    title: '备用轨道 A',
-    description: '两分多钟的第一颗声音卫星。当你想换一种情绪继续浏览时，它会从当前主旋律平滑接管频道。',
-    hint: 'NOW PLAYING · 备用轨道 A'
+    code: 'CORNFIELD CHASE · RESEARCH SCENE · 02:04',
+    title: 'Cornfield Chase',
+    description: '当页面进入项目探索、物理与未来科研坐标时，这条轨道接管配乐，让向天空提问的过程拥有更辽阔的声音。',
+    hint: 'AUTO SCENE · 未来坐标 / 科研星空'
   },
   city: {
     src: 'assets/audio/alternate-b.mp3',
     duration: 97.489,
     durationLabel: '1:37',
-    code: 'ALTERNATE ORBIT B · 01:37',
-    title: '备用轨道 B',
-    description: '更短的一颗声音卫星，适合快速切换氛围，也可以独立循环成为照片与舞台章节的背景。',
-    hint: 'NOW PLAYING · 备用轨道 B'
+    code: 'CITY OF STARS · STAGE SCENE · 01:37',
+    title: 'City of Stars',
+    description: '当页面进入音乐剧舞台、朋友赞赏与照片故事时，这条轨道接管配乐，把灯光、花束与回忆连成城市夜色。',
+    hint: 'AUTO SCENE · 音乐剧舞台 / 照片故事'
   }
 };
 
@@ -134,9 +137,15 @@ function startAmbientMusic() {
   const player = prepareTrackPlayer();
   const preset = radioPresets[soundMode];
   if (player.dataset.mode !== soundMode) {
+    const targetMode = soundMode;
+    const resumeAt = trackPositions[targetMode] || 0;
     player.src = preset.src;
-    player.dataset.mode = soundMode;
-    player.currentTime = 0;
+    player.dataset.mode = targetMode;
+    player.addEventListener('loadedmetadata', () => {
+      if (player.dataset.mode === targetMode && resumeAt > 0) {
+        player.currentTime = Math.min(resumeAt, Math.max(0, player.duration - 0.5));
+      }
+    }, { once: true });
   }
   player.volume = savedVolume;
   player.play().catch(() => {
@@ -146,6 +155,9 @@ function startAmbientMusic() {
 }
 
 function stopAmbientMusic() {
+  if (trackPlayer?.dataset.mode && Number.isFinite(trackPlayer.currentTime)) {
+    trackPositions[trackPlayer.dataset.mode] = trackPlayer.currentTime;
+  }
   trackPlayer?.pause();
   radioSection?.classList.remove('playing');
 }
@@ -176,7 +188,7 @@ function renderRadioConsole() {
   if (radioTitle) radioTitle.textContent = preset.title;
   if (radioCode) radioCode.textContent = preset.code;
   if (radioDescription) radioDescription.textContent = preset.description;
-  if (radioHint) radioHint.textContent = isPlaying ? preset.hint : (soundEnabled ? 'READY · 点击播放频道' : 'CHANNEL PAUSED · 点击播放继续');
+  if (radioHint) radioHint.textContent = isPlaying ? (sceneSyncEnabled ? preset.hint : `MANUAL PLAY · ${preset.title}`) : (soundEnabled ? 'READY · 点击播放频道' : 'CHANNEL PAUSED · 点击播放继续');
   if (radioDuration) radioDuration.textContent = preset.durationLabel;
   if (radioSeek) {
     radioSeek.max = String(preset.duration);
@@ -187,6 +199,11 @@ function renderRadioConsole() {
     radioToggle.setAttribute('aria-pressed', String(isPlaying));
     radioToggle.querySelector('span').textContent = isPlaying ? 'Ⅱ' : '▶';
     radioToggle.querySelector('b').textContent = isPlaying ? '暂停频道' : '播放频道';
+  }
+  if (radioAuto) {
+    radioAuto.classList.toggle('active', sceneSyncEnabled);
+    radioAuto.setAttribute('aria-pressed', String(sceneSyncEnabled));
+    radioAuto.querySelector('b').textContent = sceneSyncEnabled ? 'AUTO SCENE' : 'MANUAL';
   }
 }
 
@@ -223,18 +240,22 @@ function setSoundEnabled(next) {
   renderRadioConsole();
 }
 
-function selectRadioMode(mode) {
+function selectRadioMode(mode, source = 'manual') {
   if (!radioPresets[mode]) return;
   const changed = soundMode !== mode;
+  if (source === 'manual') {
+    sceneSyncEnabled = false;
+    localStorage.setItem('hxy0124-scene-sync', 'off');
+  }
   soundMode = mode;
   localStorage.setItem('hxy0124-track-mode', soundMode);
   if (!soundEnabled) {
-    setSoundEnabled(true);
+    if (source === 'manual') setSoundEnabled(true);
   } else if (changed) {
     stopAmbientMusic();
-    startAmbientMusic();
+    if (source === 'manual' || audioActivated) startAmbientMusic();
   }
-  playClickSound('bright');
+  if (source === 'manual') playClickSound('bright');
   renderRadioConsole();
 }
 
@@ -242,12 +263,55 @@ soundButton?.addEventListener('click', () => {
   setSoundEnabled(!soundEnabled);
 });
 
-radioModeButtons.forEach((button) => button.addEventListener('click', () => selectRadioMode(button.dataset.radioMode)));
+radioModeButtons.forEach((button) => button.addEventListener('click', () => selectRadioMode(button.dataset.radioMode, 'manual')));
 radioToggle?.addEventListener('click', () => {
   const isPlaying = Boolean(trackPlayer && !trackPlayer.paused);
   if (isPlaying) setSoundEnabled(false);
   else setSoundEnabled(true);
 });
+
+function modeForSection(sectionId) {
+  if (sectionId === 'projects' || sectionId === 'future') return 'field';
+  if (sectionId === 'stage' || sectionId === 'gallery') return 'city';
+  if (sectionId === 'soundtrack') return null;
+  return 'main';
+}
+
+function syncToCurrentScene() {
+  if (!sceneSyncEnabled) return;
+  const viewportCenter = window.innerHeight * 0.5;
+  const sections = [...document.querySelectorAll('main > section[id]')];
+  const closest = sections.reduce((best, section) => {
+    const rect = section.getBoundingClientRect();
+    const distance = Math.abs((rect.top + rect.bottom) / 2 - viewportCenter);
+    return !best || distance < best.distance ? { section, distance } : best;
+  }, null);
+  const nextMode = closest ? modeForSection(closest.section.id) : 'main';
+  if (nextMode && nextMode !== soundMode) selectRadioMode(nextMode, 'scene');
+}
+
+radioAuto?.addEventListener('click', () => {
+  sceneSyncEnabled = !sceneSyncEnabled;
+  localStorage.setItem('hxy0124-scene-sync', sceneSyncEnabled ? 'on' : 'off');
+  playClickSound('bright');
+  if (sceneSyncEnabled) syncToCurrentScene();
+  renderRadioConsole();
+});
+
+let sceneSwitchTimer;
+const sceneObserver = new IntersectionObserver((entries) => {
+  if (!sceneSyncEnabled) return;
+  const active = entries.find((entry) => entry.isIntersecting);
+  if (!active) return;
+  const nextMode = modeForSection(active.target.id);
+  if (!nextMode || nextMode === soundMode) return;
+  window.clearTimeout(sceneSwitchTimer);
+  sceneSwitchTimer = window.setTimeout(() => {
+    if (sceneSyncEnabled) selectRadioMode(nextMode, 'scene');
+  }, 280);
+}, { rootMargin: '-38% 0px -48% 0px', threshold: 0 });
+
+document.querySelectorAll('main > section[id]').forEach((section) => sceneObserver.observe(section));
 
 soundVolume?.addEventListener('input', () => {
   savedVolume = Number(soundVolume.value) / 100;
