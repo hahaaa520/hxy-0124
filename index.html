@@ -328,25 +328,26 @@
       </div>
     </section>
 
-    <section id="soundtrack" class="dual-radio section-pad" data-radio-theme="field" aria-labelledby="radio-heading">
+    <section id="soundtrack" class="dual-radio section-pad" data-radio-theme="main" aria-labelledby="radio-heading">
       <div class="radio-sky" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
       <div class="shell">
         <div class="radio-heading reveal">
           <div><div class="section-kicker"><span>06</span> ORIGINAL SOUNDTRACK</div><h2 id="radio-heading">在科研星空与音乐剧夜晚之间，<br />建立一座<span>双星电台。</span></h2></div>
-          <p>不是复制某一首电影配乐，而是把我喜欢的辽阔、浪漫和舞台感，写成 HXY-0124 自己的两条声音轨道。</p>
+          <p>一条三分多钟的主旋律贯穿整座观察站，两颗备用声音卫星随时可以接管频道，让访客用耳朵选择此刻的 HXY-0124。</p>
         </div>
         <div class="radio-console reveal">
           <div class="radio-channels" role="tablist" aria-label="选择原创声音频道">
-            <button class="radio-channel active" type="button" role="tab" aria-selected="true" data-radio-mode="field"><i>01</i><small>RESEARCH SKY</small><strong>星野追光</strong><span>辽阔琶音 · 远方长音</span></button>
-            <div class="radio-core" aria-hidden="true"><span class="radio-ring ring-one"></span><span class="radio-ring ring-two"></span><div><small>HXY</small><strong>0124</strong><i>FM</i></div></div>
-            <button class="radio-channel" type="button" role="tab" aria-selected="false" data-radio-mode="city"><i>02</i><small>STAGE NIGHT</small><strong>星城漫游</strong><span>轻盈三拍 · 城市灯光</span></button>
+            <button class="radio-channel" type="button" role="tab" aria-selected="false" data-radio-mode="field"><i>A</i><small>ALTERNATE ORBIT · 02:04</small><strong>备用轨道 A</strong><span>一键切换 · 循环播放</span></button>
+            <button class="radio-core active" type="button" role="tab" aria-selected="true" data-radio-mode="main" aria-label="播放三分五十五秒的全站主旋律"><span class="radio-ring ring-one"></span><span class="radio-ring ring-two"></span><div><small>MAIN</small><strong>03:55</strong><i>TRACK</i></div></button>
+            <button class="radio-channel" type="button" role="tab" aria-selected="false" data-radio-mode="city"><i>B</i><small>ALTERNATE ORBIT · 01:37</small><strong>备用轨道 B</strong><span>一键切换 · 循环播放</span></button>
           </div>
           <div class="radio-now-playing">
-            <div><small id="radio-code">CHANNEL 01 · RESEARCH MODE · 72 BPM</small><h3 id="radio-title">星野追光</h3><p id="radio-description">钢琴式琶音一圈圈向远处展开，像仰望天空时不断追问“为什么”，也像科研道路上尚未抵达的坐标。</p></div>
+            <div><small id="radio-code">MAIN TRACK · FULL-SITE THEME · 03:55</small><h3 id="radio-title">全站主旋律</h3><p id="radio-description">三分多钟的完整旋律作为观察站的声音底色，从进入页面开始陪伴探索，在不同章节之间持续循环。</p></div>
             <div class="radio-actions">
               <button id="radio-toggle" type="button"><span>Ⅱ</span><b>暂停频道</b></button>
-              <p id="radio-hint">NOW PLAYING · 适合未来坐标</p>
+              <p id="radio-hint">READY · 首次点击后开始播放</p>
             </div>
+            <label class="radio-time" for="radio-seek"><span id="radio-current">0:00</span><input id="radio-seek" type="range" min="0" max="235" value="0" step="0.1" aria-label="音乐播放进度" /><span id="radio-duration">3:55</span></label>
             <div class="radio-spectrum" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
           </div>
         </div>

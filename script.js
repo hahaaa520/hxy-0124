@@ -17,42 +17,50 @@ const radioTitle = document.querySelector('#radio-title');
 const radioCode = document.querySelector('#radio-code');
 const radioDescription = document.querySelector('#radio-description');
 const radioHint = document.querySelector('#radio-hint');
+const radioCurrent = document.querySelector('#radio-current');
+const radioDuration = document.querySelector('#radio-duration');
+const radioSeek = document.querySelector('#radio-seek');
 
 // Original procedural soundtrack: no external audio file, no extra network request.
 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 let audioContext;
 let audioMaster;
-let musicBus;
 let effectsBus;
-let musicTimer;
-let musicStep = 0;
+let trackPlayer;
 let audioActivated = false;
 let soundEnabled = localStorage.getItem('hxy0124-sound') !== 'off';
-let soundMode = localStorage.getItem('hxy0124-radio-mode') === 'city' ? 'city' : 'field';
+let soundMode = ['main', 'field', 'city'].includes(localStorage.getItem('hxy0124-track-mode')) ? localStorage.getItem('hxy0124-track-mode') : 'main';
 let savedVolume = Number(localStorage.getItem('hxy0124-volume') || 0.32);
 if (!Number.isFinite(savedVolume)) savedVolume = 0.32;
 savedVolume = Math.min(1, Math.max(0, savedVolume));
 
 const radioPresets = {
+  main: {
+    src: 'assets/audio/main-theme.mp3',
+    duration: 234.945,
+    durationLabel: '3:55',
+    code: 'MAIN TRACK · FULL-SITE THEME · 03:55',
+    title: '全站主旋律',
+    description: '三分多钟的完整旋律作为观察站的声音底色，从进入页面开始陪伴探索，在不同章节之间持续循环。',
+    hint: 'NOW PLAYING · HXY-0124 主旋律'
+  },
   field: {
-    interval: 840,
-    pulse: 4,
-    melody: [261.63, 329.63, 392.0, 493.88, 440.0, 392.0, 329.63, 293.66, 349.23, 440.0, 523.25, 392.0],
-    roots: [130.81, 146.83],
-    code: 'CHANNEL 01 · RESEARCH MODE · 72 BPM',
-    title: '星野追光',
-    description: '钢琴式琶音一圈圈向远处展开，像仰望天空时不断追问“为什么”，也像科研道路上尚未抵达的坐标。',
-    hint: 'NOW PLAYING · 适合未来坐标'
+    src: 'assets/audio/alternate-a.mp3',
+    duration: 124.473,
+    durationLabel: '2:04',
+    code: 'ALTERNATE ORBIT A · 02:04',
+    title: '备用轨道 A',
+    description: '两分多钟的第一颗声音卫星。当你想换一种情绪继续浏览时，它会从当前主旋律平滑接管频道。',
+    hint: 'NOW PLAYING · 备用轨道 A'
   },
   city: {
-    interval: 720,
-    pulse: 3,
-    melody: [293.66, 369.99, 440.0, 554.37, 493.88, 440.0, 369.99, 329.63, 392.0, 493.88, 587.33, 440.0],
-    roots: [146.83, 196.0],
-    code: 'CHANNEL 02 · STAGE MODE · 84 BPM',
-    title: '星城漫游',
-    description: '轻盈的三拍脚步穿过城市灯光，把音乐剧舞台、朋友的花和散场后的夜晚，留成温柔又明亮的回声。',
-    hint: 'NOW PLAYING · 适合音乐剧舞台'
+    src: 'assets/audio/alternate-b.mp3',
+    duration: 97.489,
+    durationLabel: '1:37',
+    code: 'ALTERNATE ORBIT B · 01:37',
+    title: '备用轨道 B',
+    description: '更短的一颗声音卫星，适合快速切换氛围，也可以独立循环成为照片与舞台章节的背景。',
+    hint: 'NOW PLAYING · 备用轨道 B'
   }
 };
 
@@ -60,15 +68,48 @@ function prepareAudio() {
   if (audioContext || !AudioContextClass) return Boolean(audioContext);
   audioContext = new AudioContextClass();
   audioMaster = audioContext.createGain();
-  musicBus = audioContext.createGain();
   effectsBus = audioContext.createGain();
   audioMaster.gain.value = savedVolume;
-  musicBus.gain.value = 0.0001;
   effectsBus.gain.value = 0.72;
-  musicBus.connect(audioMaster);
   effectsBus.connect(audioMaster);
   audioMaster.connect(audioContext.destination);
   return true;
+}
+
+function formatTrackTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+}
+
+function prepareTrackPlayer() {
+  if (trackPlayer) return trackPlayer;
+  trackPlayer = new Audio();
+  trackPlayer.preload = 'none';
+  trackPlayer.loop = true;
+  trackPlayer.volume = savedVolume;
+  trackPlayer.addEventListener('loadstart', () => {
+    if (radioHint) radioHint.textContent = 'LOADING · 正在接收声音信号';
+  });
+  trackPlayer.addEventListener('playing', () => {
+    renderRadioConsole();
+  });
+  trackPlayer.addEventListener('waiting', () => {
+    if (radioHint) radioHint.textContent = 'BUFFERING · 正在缓冲音频';
+  });
+  trackPlayer.addEventListener('error', () => {
+    if (radioHint) radioHint.textContent = 'AUDIO ERROR · 请检查音频文件';
+    radioSection?.classList.remove('playing');
+  });
+  trackPlayer.addEventListener('timeupdate', () => {
+    if (radioCurrent) radioCurrent.textContent = formatTrackTime(trackPlayer.currentTime);
+    if (radioSeek && !radioSeek.matches(':active')) radioSeek.value = String(trackPlayer.currentTime);
+  });
+  trackPlayer.addEventListener('loadedmetadata', () => {
+    if (radioSeek) radioSeek.max = String(trackPlayer.duration || radioPresets[soundMode].duration);
+    if (radioDuration) radioDuration.textContent = formatTrackTime(trackPlayer.duration || radioPresets[soundMode].duration);
+  });
+  return trackPlayer;
 }
 
 function makeTone(frequency, duration, level, type = 'sine', destination = effectsBus, delay = 0) {
@@ -87,46 +128,26 @@ function makeTone(frequency, duration, level, type = 'sine', destination = effec
   oscillator.stop(start + duration + 0.03);
 }
 
-function scheduleAmbientStep() {
-  if (!audioContext || !soundEnabled || document.hidden) return;
-  const preset = radioPresets[soundMode];
-  const note = preset.melody[musicStep % preset.melody.length];
-  if (soundMode === 'field') {
-    makeTone(note, 2.7, 0.025, 'sine', musicBus);
-    makeTone(note * 2, 1.45, 0.006, 'triangle', musicBus, 0.08);
-  } else {
-    makeTone(note, 0.66, 0.024, 'triangle', musicBus);
-    makeTone(note * 2, 0.42, 0.005, 'sine', musicBus, 0.035);
-  }
-  if (musicStep % preset.pulse === 0) {
-    const rootNote = preset.roots[Math.floor(musicStep / preset.pulse) % preset.roots.length];
-    const bassDuration = soundMode === 'field' ? 3.7 : 1.55;
-    makeTone(rootNote, bassDuration, soundMode === 'field' ? 0.018 : 0.022, 'sine', musicBus);
-    makeTone(rootNote * 1.5, bassDuration * 0.88, 0.009, 'sine', musicBus, soundMode === 'field' ? 0.16 : 0.04);
-  }
-  musicStep += 1;
-}
-
 function startAmbientMusic() {
-  if (!soundEnabled || !prepareAudio()) return;
+  if (!soundEnabled) return;
   audioActivated = true;
-  audioContext.resume();
-  musicBus.gain.cancelScheduledValues(audioContext.currentTime);
-  musicBus.gain.setValueAtTime(Math.max(0.0001, musicBus.gain.value), audioContext.currentTime);
-  musicBus.gain.exponentialRampToValueAtTime(0.78, audioContext.currentTime + 1.2);
-  if (!musicTimer) {
-    scheduleAmbientStep();
-    musicTimer = window.setInterval(scheduleAmbientStep, radioPresets[soundMode].interval);
+  const player = prepareTrackPlayer();
+  const preset = radioPresets[soundMode];
+  if (player.dataset.mode !== soundMode) {
+    player.src = preset.src;
+    player.dataset.mode = soundMode;
+    player.currentTime = 0;
   }
+  player.volume = savedVolume;
+  player.play().catch(() => {
+    if (radioHint) radioHint.textContent = 'READY · 点击播放频道';
+    radioSection?.classList.remove('playing');
+  });
 }
 
 function stopAmbientMusic() {
-  window.clearInterval(musicTimer);
-  musicTimer = null;
-  if (!audioContext || !musicBus) return;
-  musicBus.gain.cancelScheduledValues(audioContext.currentTime);
-  musicBus.gain.setValueAtTime(Math.max(0.0001, musicBus.gain.value), audioContext.currentTime);
-  musicBus.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.45);
+  trackPlayer?.pause();
+  radioSection?.classList.remove('playing');
 }
 
 function renderSoundControl() {
@@ -144,8 +165,9 @@ function renderSoundControl() {
 
 function renderRadioConsole() {
   const preset = radioPresets[soundMode];
+  const isPlaying = Boolean(trackPlayer && !trackPlayer.paused);
   radioSection?.setAttribute('data-radio-theme', soundMode);
-  radioSection?.classList.toggle('playing', soundEnabled);
+  radioSection?.classList.toggle('playing', isPlaying);
   radioModeButtons.forEach((button) => {
     const active = button.dataset.radioMode === soundMode;
     button.classList.toggle('active', active);
@@ -154,12 +176,17 @@ function renderRadioConsole() {
   if (radioTitle) radioTitle.textContent = preset.title;
   if (radioCode) radioCode.textContent = preset.code;
   if (radioDescription) radioDescription.textContent = preset.description;
-  if (radioHint) radioHint.textContent = soundEnabled ? preset.hint : 'CHANNEL PAUSED · 点击播放继续';
+  if (radioHint) radioHint.textContent = isPlaying ? preset.hint : (soundEnabled ? 'READY · 点击播放频道' : 'CHANNEL PAUSED · 点击播放继续');
+  if (radioDuration) radioDuration.textContent = preset.durationLabel;
+  if (radioSeek) {
+    radioSeek.max = String(preset.duration);
+    if (!trackPlayer || trackPlayer.dataset.mode !== soundMode) radioSeek.value = '0';
+  }
   if (radioToggle) {
-    radioToggle.classList.toggle('active', soundEnabled);
-    radioToggle.setAttribute('aria-pressed', String(soundEnabled));
-    radioToggle.querySelector('span').textContent = soundEnabled ? 'Ⅱ' : '▶';
-    radioToggle.querySelector('b').textContent = soundEnabled ? '暂停频道' : '播放频道';
+    radioToggle.classList.toggle('active', isPlaying);
+    radioToggle.setAttribute('aria-pressed', String(isPlaying));
+    radioToggle.querySelector('span').textContent = isPlaying ? 'Ⅱ' : '▶';
+    radioToggle.querySelector('b').textContent = isPlaying ? '暂停频道' : '播放频道';
   }
 }
 
@@ -182,18 +209,12 @@ function playRevealSound() {
   makeTone(587.33, 0.5, 0.022, 'sine', effectsBus, 0.08);
 }
 
-function playChannelTransition() {
-  const notes = soundMode === 'field' ? [392.0, 523.25, 659.25] : [369.99, 440.0, 554.37];
-  notes.forEach((note, index) => makeTone(note, 0.62, 0.032, index === 1 ? 'triangle' : 'sine', effectsBus, index * 0.11));
-}
-
 function setSoundEnabled(next) {
   if (!AudioContextClass) return;
   if (!next && soundEnabled) playClickSound('bright');
   soundEnabled = next;
   if (soundEnabled) {
     startAmbientMusic();
-    playChannelTransition();
   } else {
     stopAmbientMusic();
   }
@@ -206,19 +227,14 @@ function selectRadioMode(mode) {
   if (!radioPresets[mode]) return;
   const changed = soundMode !== mode;
   soundMode = mode;
-  musicStep = 0;
-  localStorage.setItem('hxy0124-radio-mode', soundMode);
+  localStorage.setItem('hxy0124-track-mode', soundMode);
   if (!soundEnabled) {
     setSoundEnabled(true);
   } else if (changed) {
     stopAmbientMusic();
-    window.setTimeout(() => {
-      startAmbientMusic();
-      playChannelTransition();
-    }, 180);
-  } else {
-    playChannelTransition();
+    startAmbientMusic();
   }
+  playClickSound('bright');
   renderRadioConsole();
 }
 
@@ -227,12 +243,23 @@ soundButton?.addEventListener('click', () => {
 });
 
 radioModeButtons.forEach((button) => button.addEventListener('click', () => selectRadioMode(button.dataset.radioMode)));
-radioToggle?.addEventListener('click', () => setSoundEnabled(!soundEnabled));
+radioToggle?.addEventListener('click', () => {
+  const isPlaying = Boolean(trackPlayer && !trackPlayer.paused);
+  if (isPlaying) setSoundEnabled(false);
+  else setSoundEnabled(true);
+});
 
 soundVolume?.addEventListener('input', () => {
   savedVolume = Number(soundVolume.value) / 100;
   localStorage.setItem('hxy0124-volume', String(savedVolume));
   if (prepareAudio()) audioMaster.gain.setTargetAtTime(savedVolume, audioContext.currentTime, 0.04);
+  if (trackPlayer) trackPlayer.volume = savedVolume;
+});
+
+radioSeek?.addEventListener('input', () => {
+  if (!trackPlayer || trackPlayer.dataset.mode !== soundMode) return;
+  trackPlayer.currentTime = Number(radioSeek.value);
+  if (radioCurrent) radioCurrent.textContent = formatTrackTime(trackPlayer.currentTime);
 });
 
 document.addEventListener('pointerdown', () => {
