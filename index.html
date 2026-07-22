@@ -31,7 +31,7 @@
         <span class="sticker-label">华心怡 · OBSERVER 019</span>
       </span>
     </button>
-    <p class="intro-hint"><span>点击我</span>，接收第一束信号 <i>↗</i></p>
+    <p class="intro-hint"><span>点击我</span>，接收第一束信号 <i>↗</i><small>并开启原创「宇宙电台」</small></p>
     <button class="intro-skip" type="button">跳过启动程序 →</button>
     <div class="intro-deco deco-one">✦</div><div class="intro-deco deco-two">✿</div><div class="intro-deco deco-three">⌁</div>
     <div class="formula formula-one" aria-hidden="true">E = mc²</div>
@@ -64,6 +64,10 @@
     <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-nav"><i></i><i></i><span class="sr-only">打开导航</span></button>
     <nav id="site-nav" class="site-nav" aria-label="主导航">
       <a href="#projects">初心主线</a><a href="#highlights">成果信号</a><a href="#experience">行动现场</a><a href="#stage">舞台回声</a><a href="#gallery">记忆胶片</a><a href="#future">研究日志</a><a href="#story">最终星座</a>
+      <div class="sound-control">
+        <button class="sound-button" type="button" aria-label="关闭宇宙电台" aria-pressed="true"><span class="sound-wave" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b>宇宙电台</b><small id="sound-state">ON</small></button>
+        <label class="sound-volume" for="sound-volume"><span>VOLUME</span><input id="sound-volume" type="range" min="0" max="100" value="32" aria-label="背景音乐音量" /></label>
+      </div>
       <button class="theme-button" type="button" aria-label="切换深色模式"><span class="sun">☀</span><span class="moon">☾</span></button>
     </nav>
   </header>

@@ -7,6 +7,160 @@ const characterButton = document.querySelector('.character-button');
 const introSkip = document.querySelector('.intro-skip');
 const miniGuide = document.querySelector('.mini-guide');
 const miniCharacter = document.querySelector('.mini-character');
+const soundButton = document.querySelector('.sound-button');
+const soundState = document.querySelector('#sound-state');
+const soundVolume = document.querySelector('#sound-volume');
+
+// Original procedural soundtrack: no external audio file, no extra network request.
+const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+let audioContext;
+let audioMaster;
+let musicBus;
+let effectsBus;
+let musicTimer;
+let musicStep = 0;
+let audioActivated = false;
+let soundEnabled = localStorage.getItem('hxy0124-sound') !== 'off';
+let savedVolume = Number(localStorage.getItem('hxy0124-volume') || 0.32);
+if (!Number.isFinite(savedVolume)) savedVolume = 0.32;
+savedVolume = Math.min(1, Math.max(0, savedVolume));
+
+function prepareAudio() {
+  if (audioContext || !AudioContextClass) return Boolean(audioContext);
+  audioContext = new AudioContextClass();
+  audioMaster = audioContext.createGain();
+  musicBus = audioContext.createGain();
+  effectsBus = audioContext.createGain();
+  audioMaster.gain.value = savedVolume;
+  musicBus.gain.value = 0.0001;
+  effectsBus.gain.value = 0.72;
+  musicBus.connect(audioMaster);
+  effectsBus.connect(audioMaster);
+  audioMaster.connect(audioContext.destination);
+  return true;
+}
+
+function makeTone(frequency, duration, level, type = 'sine', destination = effectsBus, delay = 0) {
+  if (!prepareAudio() || !soundEnabled) return;
+  const start = audioContext.currentTime + delay;
+  const oscillator = audioContext.createOscillator();
+  const envelope = audioContext.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  envelope.gain.setValueAtTime(0.0001, start);
+  envelope.gain.exponentialRampToValueAtTime(Math.max(0.0002, level), start + Math.min(0.08, duration * 0.18));
+  envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.connect(envelope);
+  envelope.connect(destination || effectsBus);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.03);
+}
+
+function scheduleAmbientStep() {
+  if (!audioContext || !soundEnabled || document.hidden) return;
+  const melody = [261.63, 329.63, 392.0, 493.88, 440.0, 392.0, 329.63, 293.66, 349.23, 440.0, 523.25, 392.0];
+  const note = melody[musicStep % melody.length];
+  makeTone(note, 2.7, 0.025, 'sine', musicBus);
+  makeTone(note * 2, 1.45, 0.006, 'triangle', musicBus, 0.08);
+  if (musicStep % 4 === 0) {
+    const rootNote = musicStep % 8 === 0 ? 130.81 : 146.83;
+    makeTone(rootNote, 3.7, 0.018, 'sine', musicBus);
+    makeTone(rootNote * 1.5, 3.4, 0.009, 'sine', musicBus, 0.16);
+  }
+  musicStep += 1;
+}
+
+function startAmbientMusic() {
+  if (!soundEnabled || !prepareAudio()) return;
+  audioActivated = true;
+  audioContext.resume();
+  musicBus.gain.cancelScheduledValues(audioContext.currentTime);
+  musicBus.gain.setValueAtTime(Math.max(0.0001, musicBus.gain.value), audioContext.currentTime);
+  musicBus.gain.exponentialRampToValueAtTime(0.78, audioContext.currentTime + 1.2);
+  if (!musicTimer) {
+    scheduleAmbientStep();
+    musicTimer = window.setInterval(scheduleAmbientStep, 920);
+  }
+}
+
+function stopAmbientMusic() {
+  window.clearInterval(musicTimer);
+  musicTimer = null;
+  if (!audioContext || !musicBus) return;
+  musicBus.gain.cancelScheduledValues(audioContext.currentTime);
+  musicBus.gain.setValueAtTime(Math.max(0.0001, musicBus.gain.value), audioContext.currentTime);
+  musicBus.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.45);
+}
+
+function renderSoundControl() {
+  const available = Boolean(AudioContextClass);
+  const active = available && soundEnabled;
+  soundButton?.classList.toggle('active', active);
+  soundButton?.setAttribute('aria-pressed', String(active));
+  soundButton?.setAttribute('aria-label', active ? '关闭宇宙电台' : '开启宇宙电台');
+  if (soundState) soundState.textContent = available ? (active ? 'ON' : 'OFF') : 'N/A';
+  if (soundVolume) {
+    soundVolume.value = String(Math.round(savedVolume * 100));
+    soundVolume.disabled = !available;
+  }
+}
+
+function playClickSound(variant = 'soft') {
+  if (!soundEnabled || !prepareAudio()) return;
+  audioContext.resume();
+  const base = variant === 'bright' ? 660 : 520;
+  makeTone(base, 0.11, 0.035, 'sine');
+  makeTone(base * 1.25, 0.09, 0.018, 'triangle', effectsBus, 0.025);
+}
+
+function playSignalSound() {
+  if (!soundEnabled || !prepareAudio()) return;
+  [523.25, 659.25, 783.99].forEach((note, index) => makeTone(note, 0.55, 0.04, 'sine', effectsBus, index * 0.09));
+}
+
+function playRevealSound() {
+  if (!soundEnabled || !prepareAudio()) return;
+  makeTone(392.0, 0.42, 0.026, 'sine');
+  makeTone(587.33, 0.5, 0.022, 'sine', effectsBus, 0.08);
+}
+
+soundButton?.addEventListener('click', () => {
+  if (soundEnabled) {
+    playClickSound('bright');
+    soundEnabled = false;
+    stopAmbientMusic();
+  } else {
+    soundEnabled = true;
+    startAmbientMusic();
+    playSignalSound();
+  }
+  localStorage.setItem('hxy0124-sound', soundEnabled ? 'on' : 'off');
+  renderSoundControl();
+});
+
+soundVolume?.addEventListener('input', () => {
+  savedVolume = Number(soundVolume.value) / 100;
+  localStorage.setItem('hxy0124-volume', String(savedVolume));
+  if (prepareAudio()) audioMaster.gain.setTargetAtTime(savedVolume, audioContext.currentTime, 0.04);
+});
+
+document.addEventListener('pointerdown', () => {
+  if (soundEnabled) startAmbientMusic();
+}, { once: true });
+
+document.addEventListener('click', (event) => {
+  const interactive = event.target.closest('button, a, .photo-card');
+  if (!interactive || interactive === soundButton || interactive.closest('.sound-control')) return;
+  const bright = interactive.matches('.primary-button, .character-button, .award-star, .era-memory, .project-tab');
+  playClickSound(bright ? 'bright' : 'soft');
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopAmbientMusic();
+  else if (audioActivated && soundEnabled) startAmbientMusic();
+});
+
+renderSoundControl();
 
 document.body.style.overflow = 'hidden';
 
@@ -243,6 +397,7 @@ function collectSignal(key) {
   sessionStorage.setItem('hxy0124-signals', JSON.stringify([...collectedSignals]));
   renderSignals();
   showUnlock(key);
+  playSignalSound();
 }
 
 document.querySelectorAll('[data-signal]').forEach((source) => source.addEventListener('click', () => collectSignal(source.dataset.signal)));
@@ -384,6 +539,7 @@ function activateLingjingCase(caseId) {
   if (lingjingOutput) lingjingOutput.textContent = scenario.output;
   lingjingAnswerCard?.classList.remove('flash');
   requestAnimationFrame(() => lingjingAnswerCard?.classList.add('flash'));
+  playRevealSound();
 }
 
 lingjingCaseButtons.forEach((button) => button.addEventListener('click', () => activateLingjingCase(button.dataset.lingjingCase)));
@@ -485,6 +641,7 @@ function openAwardEvidence(source) {
   awardModal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   awardModalClose.focus();
+  playRevealSound();
 }
 
 function closeAwardEvidence() {
