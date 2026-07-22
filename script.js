@@ -10,6 +10,13 @@ const miniCharacter = document.querySelector('.mini-character');
 const soundButton = document.querySelector('.sound-button');
 const soundState = document.querySelector('#sound-state');
 const soundVolume = document.querySelector('#sound-volume');
+const radioSection = document.querySelector('.dual-radio');
+const radioModeButtons = [...document.querySelectorAll('[data-radio-mode]')];
+const radioToggle = document.querySelector('#radio-toggle');
+const radioTitle = document.querySelector('#radio-title');
+const radioCode = document.querySelector('#radio-code');
+const radioDescription = document.querySelector('#radio-description');
+const radioHint = document.querySelector('#radio-hint');
 
 // Original procedural soundtrack: no external audio file, no extra network request.
 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -21,9 +28,33 @@ let musicTimer;
 let musicStep = 0;
 let audioActivated = false;
 let soundEnabled = localStorage.getItem('hxy0124-sound') !== 'off';
+let soundMode = localStorage.getItem('hxy0124-radio-mode') === 'city' ? 'city' : 'field';
 let savedVolume = Number(localStorage.getItem('hxy0124-volume') || 0.32);
 if (!Number.isFinite(savedVolume)) savedVolume = 0.32;
 savedVolume = Math.min(1, Math.max(0, savedVolume));
+
+const radioPresets = {
+  field: {
+    interval: 840,
+    pulse: 4,
+    melody: [261.63, 329.63, 392.0, 493.88, 440.0, 392.0, 329.63, 293.66, 349.23, 440.0, 523.25, 392.0],
+    roots: [130.81, 146.83],
+    code: 'CHANNEL 01 · RESEARCH MODE · 72 BPM',
+    title: '星野追光',
+    description: '钢琴式琶音一圈圈向远处展开，像仰望天空时不断追问“为什么”，也像科研道路上尚未抵达的坐标。',
+    hint: 'NOW PLAYING · 适合未来坐标'
+  },
+  city: {
+    interval: 720,
+    pulse: 3,
+    melody: [293.66, 369.99, 440.0, 554.37, 493.88, 440.0, 369.99, 329.63, 392.0, 493.88, 587.33, 440.0],
+    roots: [146.83, 196.0],
+    code: 'CHANNEL 02 · STAGE MODE · 84 BPM',
+    title: '星城漫游',
+    description: '轻盈的三拍脚步穿过城市灯光，把音乐剧舞台、朋友的花和散场后的夜晚，留成温柔又明亮的回声。',
+    hint: 'NOW PLAYING · 适合音乐剧舞台'
+  }
+};
 
 function prepareAudio() {
   if (audioContext || !AudioContextClass) return Boolean(audioContext);
@@ -58,14 +89,20 @@ function makeTone(frequency, duration, level, type = 'sine', destination = effec
 
 function scheduleAmbientStep() {
   if (!audioContext || !soundEnabled || document.hidden) return;
-  const melody = [261.63, 329.63, 392.0, 493.88, 440.0, 392.0, 329.63, 293.66, 349.23, 440.0, 523.25, 392.0];
-  const note = melody[musicStep % melody.length];
-  makeTone(note, 2.7, 0.025, 'sine', musicBus);
-  makeTone(note * 2, 1.45, 0.006, 'triangle', musicBus, 0.08);
-  if (musicStep % 4 === 0) {
-    const rootNote = musicStep % 8 === 0 ? 130.81 : 146.83;
-    makeTone(rootNote, 3.7, 0.018, 'sine', musicBus);
-    makeTone(rootNote * 1.5, 3.4, 0.009, 'sine', musicBus, 0.16);
+  const preset = radioPresets[soundMode];
+  const note = preset.melody[musicStep % preset.melody.length];
+  if (soundMode === 'field') {
+    makeTone(note, 2.7, 0.025, 'sine', musicBus);
+    makeTone(note * 2, 1.45, 0.006, 'triangle', musicBus, 0.08);
+  } else {
+    makeTone(note, 0.66, 0.024, 'triangle', musicBus);
+    makeTone(note * 2, 0.42, 0.005, 'sine', musicBus, 0.035);
+  }
+  if (musicStep % preset.pulse === 0) {
+    const rootNote = preset.roots[Math.floor(musicStep / preset.pulse) % preset.roots.length];
+    const bassDuration = soundMode === 'field' ? 3.7 : 1.55;
+    makeTone(rootNote, bassDuration, soundMode === 'field' ? 0.018 : 0.022, 'sine', musicBus);
+    makeTone(rootNote * 1.5, bassDuration * 0.88, 0.009, 'sine', musicBus, soundMode === 'field' ? 0.16 : 0.04);
   }
   musicStep += 1;
 }
@@ -79,7 +116,7 @@ function startAmbientMusic() {
   musicBus.gain.exponentialRampToValueAtTime(0.78, audioContext.currentTime + 1.2);
   if (!musicTimer) {
     scheduleAmbientStep();
-    musicTimer = window.setInterval(scheduleAmbientStep, 920);
+    musicTimer = window.setInterval(scheduleAmbientStep, radioPresets[soundMode].interval);
   }
 }
 
@@ -105,6 +142,27 @@ function renderSoundControl() {
   }
 }
 
+function renderRadioConsole() {
+  const preset = radioPresets[soundMode];
+  radioSection?.setAttribute('data-radio-theme', soundMode);
+  radioSection?.classList.toggle('playing', soundEnabled);
+  radioModeButtons.forEach((button) => {
+    const active = button.dataset.radioMode === soundMode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', String(active));
+  });
+  if (radioTitle) radioTitle.textContent = preset.title;
+  if (radioCode) radioCode.textContent = preset.code;
+  if (radioDescription) radioDescription.textContent = preset.description;
+  if (radioHint) radioHint.textContent = soundEnabled ? preset.hint : 'CHANNEL PAUSED · 点击播放继续';
+  if (radioToggle) {
+    radioToggle.classList.toggle('active', soundEnabled);
+    radioToggle.setAttribute('aria-pressed', String(soundEnabled));
+    radioToggle.querySelector('span').textContent = soundEnabled ? 'Ⅱ' : '▶';
+    radioToggle.querySelector('b').textContent = soundEnabled ? '暂停频道' : '播放频道';
+  }
+}
+
 function playClickSound(variant = 'soft') {
   if (!soundEnabled || !prepareAudio()) return;
   audioContext.resume();
@@ -124,19 +182,52 @@ function playRevealSound() {
   makeTone(587.33, 0.5, 0.022, 'sine', effectsBus, 0.08);
 }
 
-soundButton?.addEventListener('click', () => {
+function playChannelTransition() {
+  const notes = soundMode === 'field' ? [392.0, 523.25, 659.25] : [369.99, 440.0, 554.37];
+  notes.forEach((note, index) => makeTone(note, 0.62, 0.032, index === 1 ? 'triangle' : 'sine', effectsBus, index * 0.11));
+}
+
+function setSoundEnabled(next) {
+  if (!AudioContextClass) return;
+  if (!next && soundEnabled) playClickSound('bright');
+  soundEnabled = next;
   if (soundEnabled) {
-    playClickSound('bright');
-    soundEnabled = false;
-    stopAmbientMusic();
-  } else {
-    soundEnabled = true;
     startAmbientMusic();
-    playSignalSound();
+    playChannelTransition();
+  } else {
+    stopAmbientMusic();
   }
   localStorage.setItem('hxy0124-sound', soundEnabled ? 'on' : 'off');
   renderSoundControl();
+  renderRadioConsole();
+}
+
+function selectRadioMode(mode) {
+  if (!radioPresets[mode]) return;
+  const changed = soundMode !== mode;
+  soundMode = mode;
+  musicStep = 0;
+  localStorage.setItem('hxy0124-radio-mode', soundMode);
+  if (!soundEnabled) {
+    setSoundEnabled(true);
+  } else if (changed) {
+    stopAmbientMusic();
+    window.setTimeout(() => {
+      startAmbientMusic();
+      playChannelTransition();
+    }, 180);
+  } else {
+    playChannelTransition();
+  }
+  renderRadioConsole();
+}
+
+soundButton?.addEventListener('click', () => {
+  setSoundEnabled(!soundEnabled);
 });
+
+radioModeButtons.forEach((button) => button.addEventListener('click', () => selectRadioMode(button.dataset.radioMode)));
+radioToggle?.addEventListener('click', () => setSoundEnabled(!soundEnabled));
 
 soundVolume?.addEventListener('input', () => {
   savedVolume = Number(soundVolume.value) / 100;
@@ -150,7 +241,7 @@ document.addEventListener('pointerdown', () => {
 
 document.addEventListener('click', (event) => {
   const interactive = event.target.closest('button, a, .photo-card');
-  if (!interactive || interactive === soundButton || interactive.closest('.sound-control')) return;
+  if (!interactive || interactive === soundButton || interactive.closest('.sound-control, .radio-console')) return;
   const bright = interactive.matches('.primary-button, .character-button, .award-star, .era-memory, .project-tab');
   playClickSound(bright ? 'bright' : 'soft');
 });
@@ -161,6 +252,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 renderSoundControl();
+renderRadioConsole();
 
 document.body.style.overflow = 'hidden';
 
