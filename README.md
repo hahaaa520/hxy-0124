@@ -53,7 +53,7 @@ docs/        README 网站预览图
 - [代码仓鼠 · Repo Hamster](https://github.com/hahaaa520/kiro-repo-hamster)：由 GitHub 活动驱动的电子宠物。
 - [Campus Arena](https://github.com/hahaaa520/campus-arena)：鸿蒙电脑校园赛事赛程编排工具。
 - [梦伴 AI](https://github.com/hahaaa520/mengban-ai)：Q1 机器人儿童睡前陪伴 Skill。
-- [MuJoCo 医疗机器人仿真](https://github.com/hahaaa520/-)：带传感器与强化学习接口的医疗机械臂场景。
+- [MuJoCo 医疗机器人仿真](https://github.com/hahaaa520/mujoco-medical-robot)：带传感器与强化学习接口的医疗机械臂场景。
 
 ## 作者
 
